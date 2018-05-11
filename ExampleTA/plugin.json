@@ -8,7 +8,7 @@
             "extension_header": {
                 "extension_point_id": "sap.hc.hph.di.documents.TextProcessingConfiguration",
                 "extension_point_version": "1.0",
-                "extension_id": "sap.hc.hph.plugins.textProcessing.medical",
+                "extension_id": "ExampleTA",
                 "extension_name": "EXTENSION_NAME_KEY",
                 "extension_description": "EXTENSION_DESC_KEY"
             },
@@ -19,14 +19,14 @@
                 "BatchSize" : "1000",
                 "Actions":{
                 	"TextAnalysis":{
-                    	"Configuration":"sap.hc.hph.ta.config::EXTRACTION_CORE_MEDICAL"                    
+                    	"Configuration":"ExampleTA.ta.config::EXTRACTION_CORE_EXAMPLE"                    
                 	},
                 	"PostProcessing":{
-                    	"ImplementationLocation":"sap.hc.hph.plugins.textProcessing.ExampleTA.services.lib.postProcessing",
-                    	"FactRepresentation":"\"SAP_HPH\".\"sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED\""
+                    	"ImplementationLocation":"ExampleTA.services.lib.postProcessing",
+                    	"FactRepresentation":"\"SAP_HPH\".\"ExampleTA.postProcessing::Entities.TA_FILTERED\""
                 	},
                 	"CDWIntegration":{
-                    	"ImplementationLocation":"sap.hc.hph.plugins.textProcessing.ExampleTA.services.lib.CDWMapping"
+                    	"ImplementationLocation":"ExampleTA.services.lib.CDWMapping"
                 	}
                 }
             }

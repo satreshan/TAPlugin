@@ -13,9 +13,8 @@
                 "extension_description": "EXTENSION_DESC_KEY"
             },
             "extension_contribution": {
-                "DocumentationLink":"https%3A%2F%2Fhelp.sap.com%2Fviewer%2FConnected_Health_Administration_FP5%2F739783de29bc4f62b182a33169c1653e.html",
                 "Description":"To activate the plug-in, you must integrate ontology content and generate corresponding dictionaries.",
-                "Pre-requisites":["sap.hc.hph.plugins.ots.ncim","sap.hc.hph.plugins.ots.rxnorm"],                
+                "Pre-requisites":[],                
                 "BatchSize" : "1000",
                 "Actions":{
                 	"TextAnalysis":{

@@ -1,0 +1,35 @@
+{
+	"plugin_name" : "TEST_TA_NAME_KEY",
+	"plugin_description" : "TEST_TA_DESC_KEY",
+	"languages": ["en","de","fr"],
+	"language_textbundle": "i18n/text.hdbtextbundle",
+	"extensions": [
+        {
+            "extension_header": {
+                "extension_point_id": "sap.hc.hph.di.documents.TextProcessingConfiguration",
+                "extension_point_version": "1.0",
+                "extension_id": "sap.hc.hph.plugins.textProcessing.medical",
+                "extension_name": "EXTENSION_NAME_KEY",
+                "extension_description": "EXTENSION_DESC_KEY"
+            },
+            "extension_contribution": {
+                "DocumentationLink":"https%3A%2F%2Fhelp.sap.com%2Fviewer%2FConnected_Health_Administration_FP5%2F739783de29bc4f62b182a33169c1653e.html",
+                "Description":"To activate the plug-in, you must integrate ontology content and generate corresponding dictionaries.",
+                "Pre-requisites":["sap.hc.hph.plugins.ots.ncim","sap.hc.hph.plugins.ots.rxnorm"],                
+                "BatchSize" : "1000",
+                "Actions":{
+                	"TextAnalysis":{
+                    	"Configuration":"sap.hc.hph.ta.config::EXTRACTION_CORE_MEDICAL"                    
+                	},
+                	"PostProcessing":{
+                    	"ImplementationLocation":"sap.hc.hph.plugins.textProcessing.ExampleTA.services.lib.postProcessing",
+                    	"FactRepresentation":"\"SAP_HPH\".\"sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED\""
+                	},
+                	"CDWIntegration":{
+                    	"ImplementationLocation":"sap.hc.hph.plugins.textProcessing.ExampleTA.services.lib.CDWMapping"
+                	}
+                }
+            }
+        }
+    ]
+}

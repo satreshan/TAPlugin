@@ -1,0 +1,28 @@
+namespace sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing;
+
+@Schema: 'SAP_HPH'
+context Entities {
+  @Catalog.tableType : #COLUMN
+  entity "TA_FILTERED" {
+     key CONFIG_ID      : String(1024);
+     key DWID           : Binary(32);
+     key TA_RULE        : String(200);
+     key TA_COUNTER     : Integer64;
+     TA_TOKEN           : String(5000);
+     TA_LANGUAGE        : String(2);
+     TA_TYPE            : String(100);
+     TA_NORMALIZED      : String(5000);
+     TA_STEM            : String(5000);
+     TA_PARAGRAPH       : Integer;
+     TA_SENTENCE        : Integer;
+     TA_CREATED_AT      : UTCDateTime;
+     TA_OFFSET          : Integer64;
+     TA_PARENT          : Integer64;
+     TA_SECTION         : String(100);
+     TA_MODALITY        : String(100);
+     TA_POLARITY        : String(100);
+     TA_REFERENCE       : String(100);
+     TA_STATUS			: String(250);
+  };
+ 
+};

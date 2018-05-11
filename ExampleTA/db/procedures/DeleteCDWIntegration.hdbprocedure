@@ -1,0 +1,22 @@
+PROCEDURE "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.db.procedures::DeleteCDWIntegration" (
+in iv_auditLogID bigint,
+in iv_pipelineID nvarchar(256)
+ ) 
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER 
+	--DEFAULT SCHEMA <default_schema_name>
+	READS SQL DATA AS
+BEGIN
+/***************************** 
+	Write your procedure logic 
+ *****************************/
+ 
+ --Delete the entries relevant for this iv_auditLogID and iv_pipelineID from all tables that are relevant for CDWIntegration
+ /*
+ "SAP_HPH"."sap.hc.hph.cdw.db.models::DWEntities.Interactions_Key"
+ "SAP_HPH"."sap.hc.hph.cdw.db.models::DWEntities.Interactions_Attr"
+ "SAP_HPH"."sap.hc.hph.cdw.db.models::DWEntitiesEAV.Interaction_Details"
+ "SAP_HPH"."sap.hc.hph.cdw.db.models::DWDocuments.Interaction_Documents_Link"
+ "SAP_HPH"."sap.hc.hph.cdw.db.models::DWDocuments.Interaction_Documents_Link_Attr"
+ */
+END;

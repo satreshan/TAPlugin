@@ -1,0 +1,21 @@
+#TRANSLATE
+
+#XTIT
+TEST_TA_NAME_KEY=Custom TA example Plug-In
+#XTIT
+HEADER_TITLE=Text Processing Configuration for Custom TA example
+#XTIT
+TEST_TA_DESC_KEY=You can use this plug-in for Custom TA configuration.
+#XTIT 
+EXTENSION_NAME_KEY=Text Processing Extension for Custom TA example
+#XTIT
+EXTENSION_DESC_KEY=You can use this extension for text processing configuration. 
+
+#XMSG
+TA_VALIDATION_ERROR=Validation Failed. Erroneous TA Configuration.
+
+#XMSG
+ACTIVATION_ERR=Couldn't activate plug-in due to internal error.
+
+#XMSG
+DEACTIVATION_ERR=Couldn't deactivate plug-in due to internal error.

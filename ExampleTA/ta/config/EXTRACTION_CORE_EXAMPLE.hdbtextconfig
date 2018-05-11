@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<tasdk-configuration xmlns="http://www.sap.com/ta/config/4.0">
+ <configuration name="SAP.TextAnalysis.AnalysisModel.AggregateAnalyzer.Aggregator">
+   <property name="Analyzers" type="string-list">
+     <string-list-value>SAP.TextAnalysis.DocumentAnalysis.FormatConversion.FormatConversionAnalyzer.FC</string-list-value>
+     <string-list-value>SAP.TextAnalysis.DocumentAnalysis.StructureAnalysis.StructureAnalyzer.SA</string-list-value>
+     <string-list-value>SAP.TextAnalysis.DocumentAnalysis.LinguisticAnalysis.LinguisticAnalyzer.LX</string-list-value>
+     <string-list-value>SAP.TextAnalysis.DocumentAnalysis.Extraction.ExtractionAnalyzer.TF</string-list-value>
+     <string-list-value>SAP.TextAnalysis.DocumentAnalysis.GrammaticalRoles.GrammaticalRoleAnalyzer.GRA</string-list-value>
+   </property>
+ </configuration>
+ <configuration name="CommonSettings" />
+ <configuration name="SAP.TextAnalysis.DocumentAnalysis.FormatConversion.FormatConversionAnalyzer.FC" based-on="CommonSettings" />
+ <configuration name="SAP.TextAnalysis.DocumentAnalysis.StructureAnalysis.StructureAnalyzer.SA" based-on="CommonSettings">
+   <property name="MinimumInputLength" type="integer">
+     <integer-value>30</integer-value>
+   </property>
+   <property name="EvaluationSampleSize" type="integer">
+     <integer-value>300</integer-value>
+   </property>
+   <property name="MinimumConfidence" type="integer">
+     <integer-value>50</integer-value>
+   </property>
+ </configuration>
+ <configuration name="SAP.TextAnalysis.DocumentAnalysis.LinguisticAnalysis.LinguisticAnalyzer.LX" based-on="CommonSettings">
+   <property name="GetTokenStem" type="boolean">
+     <boolean-value>true</boolean-value>
+   </property>
+   <property name="EnableStemGuesser" type="boolean">
+     <boolean-value>false</boolean-value>
+   </property>
+   <property name="GetTokenPartOfSpeech" type="boolean">
+     <boolean-value>true</boolean-value>
+   </property>
+   <property name="DisambiguatePartOfSpeech" type="boolean">
+     <boolean-value>true</boolean-value>
+   </property>
+   <property name="DisambiguateStem" type="boolean">
+     <boolean-value>true</boolean-value>
+   </property>
+   <property name="EnableCustomDictionaries" type="boolean">
+     <boolean-value>true</boolean-value>
+   </property>
+   <property name="VariantString" type="string">
+     <string-value>expanded</string-value>
+   </property>
+ </configuration>
+ <configuration name="SAP.TextAnalysis.DocumentAnalysis.Extraction.ExtractionAnalyzer.TF" based-on="CommonSettings">
+   <property name="ExtractionRules" type="string-list">
+     <string-list-value>RULE_SET_NAME</string-list-value>
+   </property>
+   <property name="Dictionaries" type="string-list">
+     <string-list-value>DICTIONARY_NAME</string-list-value>
+   </property>
+ </configuration>
+ <configuration name="SAP.TextAnalysis.DocumentAnalysis.GrammaticalRoles.GrammaticalRoleAnalyzer.GRA" based-on="CommonSettings">
+   <property name="InputEntityCategories" type="string-list">
+     <string-list-value>MWT_ABBR</string-list-value>
+     <string-list-value>MWT_ADJ</string-list-value>
+     <string-list-value>MWT_ADJ_COMP</string-list-value>
+     <string-list-value>MWT_ADJ_ORD</string-list-value>
+   </property>
+   <property name="EnableDependencyParser" type="boolean">
+     <boolean-value>true</boolean-value>
+   </property>
+ </configuration>
+ <configuration name="PreProcessor">
+   <property name="EntityTypes" type="string-list">
+     <string-list-value> ENTITY_TYPE_NAME</string-list-value>
+   </property>
+   <property name="OutputMetadata" type="boolean">
+    <boolean-value>false</boolean-value>
+   </property>
+ </configuration>
+</tasdk-configuration>

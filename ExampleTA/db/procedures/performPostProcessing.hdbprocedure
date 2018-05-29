@@ -1,0 +1,61 @@
+PROCEDURE "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.db.procedures::performPostProcessing" (in auditId bigint,in scheduleID bigint, in pluginId NVARCHAR(256), in clearStage VARCHAR(1) )
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER 
+	DEFAULT SCHEMA SAP_HPH
+	AS
+BEGIN
+/***************************** 
+	Write your procedure logic 
+ *****************************/
+ 
+ 
+   Declare taConfig nvarchar(100);
+   
+    valid_docs = select "DWID", "DWDateFrom", "ProcessingMode" from "SAP_HPH"."sap.hc.hph.di.documents.staging.db.models::DocumentStage.DocumentProcessingStatus"
+   where "ScheduleID" = :scheduleID and "DWAuditID" = :auditId;
+   
+   valid_docs_for_processing = select * from :valid_docs where "ProcessingMode" is null;
+   valid_docs_for_deletion = select * from :valid_docs where "ProcessingMode" is not null;
+   
+   ta_results = select dollar_ta.* from "SAP_HPH"."sap.hc.hph.plugins.documents.db.models::TA.Results" dollar_ta   
+   inner join :valid_docs_for_processing
+   on dollar_ta."DWID" = :valid_docs_for_processing."DWID" and
+   dollar_ta."DWDateFrom" =  :valid_docs_for_processing."DWDateFrom"
+   and dollar_ta."PluginID" = :pluginId;
+   
+   -- Get TA Configuration
+   select top 1 "ConfigurationValue" into taConfig from "SAP_HPH"."sap.hc.hph.di.documents.staging.db.models::DocumentProcessing.PipelineConfiguration"
+   where "PipelineID" = :pluginId and "Action" = 'TextAnalysis' and "ConfigurationKey" = 'Configuration';
+   --Call the post processing for every unique configuration
+   
+   ta_results_config = select "DWID","TA_RULE", "TA_COUNTER", "TA_TOKEN", "TA_LANGUAGE", "TA_TYPE", "TA_NORMALIZED", "TA_STEM", "TA_PARAGRAPH",
+    "TA_SENTENCE", "TA_CREATED_AT", "TA_OFFSET", "TA_PARENT" from :ta_results;
+  
+   delete from "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED"
+   where "DWID" in (select distinct "DWID" from :valid_docs_for_processing);
+  
+   --Perform postProcessing
+   insert into "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED_TEMP" ( select :taConfig "CONFIG_ID", 
+   "DWID", TA_RULE, TA_COUNTER, TA_TOKEN, TA_LANGUAGE, TA_TYPE, TA_NORMALIZED ,TA_STEM,TA_PARAGRAPH ,TA_SENTENCE,TA_CREATED_AT, TA_OFFSET,TA_PARENT,'med_SECTION_MEDS' TA_SECTION,
+   'ModFactual' TA_MODALITY, 'PolPositive' TA_POLARITY, 'med_RefAssociated' TA_REFERENCE,'Active' TA_STATUS, '' TA_DOSAGE FROM :ta_results_config);
+ 
+    update "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED_TEMP" 
+	set "TA_DOSAGE" = '1 mg'
+    where "TA_TYPE" = 'PROP_MISC';
+    
+   --insert postprocessing result into SAP_HPH."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED" ()
+   
+   --Dummy postProcessing result
+   insert into "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED" ( select :taConfig as "CONFIG_ID", 
+   "DWID", TA_RULE, TA_COUNTER, TA_TOKEN, TA_LANGUAGE, TA_TYPE, TA_NORMALIZED ,TA_STEM,TA_PARAGRAPH ,TA_SENTENCE,TA_CREATED_AT, TA_OFFSET,TA_PARENT,'med_SECTION_MEDS' TA_SECTION,
+   'ModFactual' TA_MODALITY, 'PolPositive' TA_POLARITY, 'med_RefAssociated' TA_REFERENCE,'Active' TA_STATUS, TA_DOSAGE 
+   FROM "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED_TEMP");
+   
+   --delete the content from TA_FILTERED for documents marked for deletion 
+   delete from "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED"
+   where "DWID" in (select distinct "DWID" from :valid_docs_for_deletion);
+   --Delete the content from TA Results if clearStage flag is set
+   delete from "SAP_HPH"."sap.hc.hph.plugins.documents.db.models::TA.Results" 
+   where :clearStage='X' and "DWID" in (select distinct "DWID" from :valid_docs);
+   
+END;

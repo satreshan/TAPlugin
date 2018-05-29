@@ -30,30 +30,14 @@ function execute(dbConn, batchID, exception, jobInput, scheduleId, pipelineId) {
 		clearStage = 'X';
 	}
 	try {
-		//Documents to be considered in this run
-		var valid_docs = 'select stage.* from   "SAP_HPH"."sap.hc.hph.di.documents.staging.db.models::DocumentStage.ProcessingStage" stage '+
-		'inner join "SAP_HPH"."sap.hc.hph.plugins.documents.db.models::TA.Document" docs '+
-		'on docs."DWID" = stage."DWID" and docs."DWDateFrom" = stage."DWDateFrom" '+
-		'where docs."ScheduleID" = ' + scheduleId + 'and docs."DWAuditID" = '+ runId ;
-		
-		//Parent InteractionID is available in "SAP_HPH"."sap.hc.hph.di.documents.staging.db.models::DocumentStage.ProcessingStage"
-		//Which can be used to find the PatientID to which new interaction needs to be assigned.
-		//Views can be used: "SAP_HPH"."sap.hc.hph.cdw.db.models::DWViews.Patient", "SAP_HPH"."sap.hc.hph.cdw.db.models::DWViews.Interactions"
-		
-		//Perform CDWMapping
-		
-		//Insert into "SAP_HPH_DI"."sap.hc.hph.plugins.ccdi.db.models::Stage.Interactions"
-		
-		//Insert into "SAP_HPH_DI"."sap.hc.hph.plugins.ccdi.db.models::Stage.InteractionDetails"
-		
-		//Insert into "SAP_HPH_DI"."sap.hc.hph.plugins.ccdi.db.models::Stage.Interaction_Documents_Link"
-		
-		
+		var postProcess = dbConn.loadProcedure("SAP_HPH", "sap.hc.hph.plugins.textProcessing.ExampleTA.db.procedures::performCDWMapping");
+		var result = postProcess(pipelineId, runId, scheduleId, clearStage);
 	} catch (e) {
 		$.trace.error("Exception!!" + e.toString());
 		exception.exceptionOccured = true;
 		exception.exceptionString = e.toString();
-	}
+		
+	} 
 	return exception;
 }
 

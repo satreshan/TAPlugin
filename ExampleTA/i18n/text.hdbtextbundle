@@ -1,18 +1,21 @@
 #TRANSLATE
 
 #XTIT
-TEST_TA_NAME_KEY=Custom TA example Plug-In
+TEST_TA_NAME_KEY=Extraction Core ExampleTA Plug-In
 #XTIT
-HEADER_TITLE=Text Processing Configuration for Custom TA example
+HEADER_TITLE=Text Processing Configuration for Extraction Core ExampleTA
 #XTIT
-TEST_TA_DESC_KEY=You can use this plug-in for Custom TA configuration.
+TEST_TA_DESC_KEY=You can use this plug-in for text processing configuration.
 #XTIT 
-EXTENSION_NAME_KEY=Text Processing Extension for Custom TA example
+EXTENSION_NAME_KEY=Text Processing Extension for Extraction Core ExampleTA
 #XTIT
 EXTENSION_DESC_KEY=You can use this extension for text processing configuration. 
 
 #XMSG
 TA_VALIDATION_ERROR=Validation Failed. Erroneous TA Configuration.
+
+#XMSG
+DOC_TYPE_DEACTIVATION_ERR=Couldn't deactivate the plug-in. Remove the document types from the plug-in.
 
 #XMSG
 ACTIVATION_ERR=Couldn't activate plug-in due to internal error.

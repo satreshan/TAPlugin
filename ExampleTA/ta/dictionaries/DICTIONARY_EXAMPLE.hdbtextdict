@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <!-- UMLS dictionary for FFH.
+  PLEASE DO NOT CHANGE ANY CATEGORY NAME BELOW.
+  Please add entity names to appropriate categories below
+  -->
+  <dictionary xmlns="http://www.sap.com/ta/4.0">
+<entity_category name="lymphnode">
+		<entity_name standard_form="lymphoma">
+			<variant name="Lymphoma" />
+			<variant name="lymphoma" />
+		</entity_name>
+</entity_category>
+<entity_category name="Size">
+		<entity_name standard_form="large">
+			<variant name="large" />
+		</entity_name>
+</entity_category>
+</dictionary>

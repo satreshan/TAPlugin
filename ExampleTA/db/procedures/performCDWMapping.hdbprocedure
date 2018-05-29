@@ -1,0 +1,38 @@
+PROCEDURE "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.db.procedures::performCDWMapping" ( 
+in iv_pluginId NVARCHAR(256),
+in iv_auditId bigint,
+in iv_scheduleID bigint,
+in iv_clearStage VARCHAR(1)) 
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER 
+	DEFAULT SCHEMA SAP_HPH
+	AS
+BEGIN
+/***************************** 
+	Write your procedure logic 
+ *****************************/
+ 
+   -- Get all the valid DWIDs that are relevant for post processing   
+   valid_docs = select stage.* from "SAP_HPH"."sap.hc.hph.di.documents.staging.db.models::DocumentStage.ProcessingStage" stage
+   inner join "SAP_HPH"."sap.hc.hph.plugins.documents.db.models::TA.Document" docs
+   on docs."DWID" = stage."DWID" and docs."DWDateFrom" = stage."DWDateFrom"
+   where docs."ScheduleID" = :iv_scheduleID and docs."DWAuditID" = :iv_auditId;
+   
+   valid_docs_for_processing = select *, :iv_pluginId "PluginID" from :valid_docs where "ProcessingMode" is null;
+   	 
+ -- get all the relevant ta_filtred entries for CDW mapping	
+	ta_filtered = select filtered.* from  
+	"SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED" filtered
+	inner join :valid_docs_for_processing docs
+	on filtered."DWID" = docs."DWID"
+	where "TA_NORMALIZED" is not null;
+	
+ -- Get the CDW facts for the current plugin
+    call "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.db.procedures::MapTAFilteredToFacts"
+    (:iv_pluginId,:ta_filtered, otFacts, otFactAttributes);
+ 	
+ 	call "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.db.procedures::MapFactsToInteractions"
+ 		(:iv_pluginId, :iv_auditId, :valid_docs,  :otFacts, :otFactAttributes);
+	
+			
+END;

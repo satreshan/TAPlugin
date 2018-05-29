@@ -30,16 +30,8 @@ function execute(dbConn, batchID, exception, jobInput, scheduleId, pipelineId) {
 		clearStage = 'X';
 	}
 	try {
-		
-		//Documents to be considered in this run
-		var valid_docs = 'select stage.* from   "SAP_HPH"."sap.hc.hph.di.documents.staging.db.models::DocumentStage.ProcessingStage" stage '+
-		'inner join "SAP_HPH"."sap.hc.hph.plugins.documents.db.models::TA.Document" docs '+
-		'on docs."DWID" = stage."DWID" and docs."DWDateFrom" = stage."DWDateFrom" '+
-		'where docs."ScheduleID" = ' + scheduleId + 'and docs."DWAuditID" = '+ runId ;
-
-		//Perform postProcessing
-		//Write results into "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED"
-		
+		var postProcess = dbConn.loadProcedure("SAP_HPH", "sap.hc.hph.plugins.textProcessing.ExampleTA.db.procedures::performPostProcessing");
+		var result = postProcess(runId, scheduleId, pipelineId, clearStage);
 	} catch (e) {
 		$.trace.error("Exception!!" + e.toString());
 		exception.exceptionOccured = true;

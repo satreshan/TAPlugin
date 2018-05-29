@@ -1,0 +1,52 @@
+PROCEDURE "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.db.procedures::MapTAFilteredToFacts" (
+in iv_plugiId NVARCHAR(256),
+in it_ta_filtered "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.postProcessing::Entities.TA_FILTERED",
+out ot_facts "SAP_HPH"."sap.hc.hph.plugins.textProcessing.common.db.models::CDWMapping.Fact",
+out ot_fact_attributes "SAP_HPH"."sap.hc.hph.plugins.textProcessing.common.db.models::CDWMapping.FactAttributes" ) 
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY DEFINER 
+	--DEFAULT SCHEMA <default_schema_name>
+	AS
+BEGIN
+/***************************** 
+	Write your procedure logic 
+ *****************************/
+ 
+ taMed =
+ select * from (
+ select *, 'Medication' "InteractionType" from  :it_ta_filtered
+ where "TA_TYPE" = 'PROP_MISC' AND "TA_MODALITY" = 'ModFactual' AND "TA_POLARITY" = 'PolPositive' AND 
+ "TA_REFERENCE" = 'med_RefAssociated' AND 
+ "TA_SECTION" = 'med_SECTION_MEDS'
+ ) ;
+ 
+ taMedAttributes = select "DWID", "InteractionType","TA_NORMALIZED" ,'Medication Date' "Attribute.OriginalValue", '<document_date>' "Value.OriginalValue"
+  from :taMed 
+  union 
+  select "DWID", "InteractionType", "TA_NORMALIZED" , 'Dosage' "Attribute.OriginalValue", "TA_DOSAGE" "Value.OriginalValue"
+  from :taMed
+  union 
+  select "DWID", "InteractionType","TA_NORMALIZED" ,  'Drug Name' "Attribute.OriginalValue", "TA_TOKEN" "Value.OriginalValue"
+  from :taMed;
+  
+
+ taFacts = select facts.*, ROUND(RAND()*100000000,0) "ID" from (
+  select * from :taMed
+  ) facts;
+  
+	
+  taFactAttributes = select t1.*, facts."ID", null "Value.CodeSystem", 
+  null "Value.Code" from 
+  (select * from :taMedAttributes 
+  ) t1
+  inner join :taFacts facts
+  on t1."DWID" = facts."DWID" and t1."InteractionType" = facts."InteractionType" and t1."TA_NORMALIZED" = facts."TA_NORMALIZED";
+  
+  ot_facts = select "ID" ,"DWID" "DWID_Document","InteractionType" "InteractionType.OriginalValue", null "InteractionType.Code",
+  null "InteractionType.CodeSystem",null "InteractionType.CodeSystemVersion" from :taFacts;
+  
+  ot_fact_attributes = select "ID","DWID" "DWID_Document", "InteractionType" "InteractionType.OriginalValue", null "InteractionType.Code",
+  null "InteractionType.CodeSystem",null "InteractionType.CodeSystemVersion", "Attribute.OriginalValue",null "Attribute.Code", null "Attribute.CodeSystem",
+  null "Attribute.CodeSystemVersion", "Value.OriginalValue", "Value.Code","Value.CodeSystem",null "Value.CodeSystemVersion" from :taFactAttributes;
+   
+END;

@@ -1,0 +1,107 @@
+PROCEDURE "SAP_HPH"."sap.hc.hph.plugins.textProcessing.ExampleTA.db.procedures::MapFactsToInteractions" (
+in iv_pluginId NVARCHAR(256),
+in iv_auditId BIGINT,
+in it_documents "SAP_HPH"."sap.hc.hph.di.documents.staging.db.models::DocumentStage.ProcessingStage",
+in it_facts "SAP_HPH"."sap.hc.hph.plugins.textProcessing.common.db.models::CDWMapping.Fact",
+in it_fact_attributes "SAP_HPH"."sap.hc.hph.plugins.textProcessing.common.db.models::CDWMapping.FactAttributes" ) 
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY DEFINER
+	DEFAULT SCHEMA "SAP_HPH"
+	AS
+BEGIN
+/***************************** 
+	Write your procedure logic 
+ *****************************/
+   DECLARE pi_id NVARCHAR(10) DEFAULT NULL;
+  
+    -- Get all the valid DWIDs that are relevant for post processing
+   valid_docs = select docs."DWID", docs."DWSource", docs."DocumentID", docs."DWDateFrom", docs."ProcessingMode" "_ProcessingMode",
+   interactions."SourceInteractionID" "ParentInteractionID",interactions."Source" "_ParentInteractionSourceID" , 
+   patients."SourcePatientID" "PatientID", patients."Source" "_PatientSourceID", 
+   interactions."PeriodStart", 
+   interactions."PeriodEnd",interactions."PeriodTimezone", interactions."OrgID" 
+   from :it_documents docs
+   inner join "SAP_HPH"."sap.hc.hph.cdw.db.models::DWViews.Interactions" interactions
+   on docs."DWParentEntitySource" = interactions."Source" and docs."ParentEntityID" = interactions."SourceInteractionID"
+   inner join "SAP_HPH"."sap.hc.hph.cdw.db.models::DWViews.Patient" patients
+   on interactions."PatientID" = patients."PatientID"
+   where docs."ParentEntityType" = 'sap.hc.hph.cdw.Interaction';
+   
+   valid_docs_for_processing = select *, :iv_pluginId "PluginID" from :valid_docs where "_ProcessingMode" is null;
+   
+   -- Get all the derived interactions for the given plugin
+   derived_interactions = select ta_interactions."DWLinkID", ta_interactions."DWID_Document",ta_interactions."DWID_Interaction", 
+   ta_interactionAttr."LinkType" from "SAP_HPH"."sap.hc.hph.cdw.db.models::DWDocuments.Interaction_Documents_Link" ta_interactions
+   inner join "SAP_HPH"."sap.hc.hph.cdw.db.models::DWDocuments.Interaction_Documents_Link_Attr" ta_interactionAttr
+   on ta_interactions."DWLinkID" = ta_interactionAttr."DWLinkID"
+   inner join :valid_docs doc_info
+   on ta_interactions."DWID_Document" = doc_info."DWID"
+   where ta_interactionAttr."LinkType" = :iv_pluginId;
+	 
+    -- Invalidate the derived interactions
+    UPDATE "SAP_HPH"."sap.hc.hph.cdw.db.models::DWEntities.Interactions_Attr" int_attr
+	 set "DWDateTo" = CURRENT_TIMESTAMP, "DWAuditID" = :iv_auditId
+	 FROM "SAP_HPH"."sap.hc.hph.cdw.db.models::DWEntities.Interactions_Attr" int_attr
+	 inner join :derived_interactions der_int
+	 on int_attr."DWID" = der_int."DWID_Interaction";
+	 	   
+    update "SAP_HPH"."sap.hc.hph.cdw.db.models::DWEntitiesEAV.Interaction_Details" int_det
+	 set "DWDateTo" = CURRENT_TIMESTAMP,"DWAuditID" = :iv_auditId
+	 FROM "SAP_HPH"."sap.hc.hph.cdw.db.models::DWEntitiesEAV.Interaction_Details" int_det
+	 inner join :derived_interactions der_int
+	 on int_det."DWID" = der_int."DWID_Interaction";
+	 
+	UPDATE "SAP_HPH"."sap.hc.hph.cdw.db.models::DWDocuments.Interaction_Documents_Link_Attr" int_linkattr
+	 set "DWDateTo" = CURRENT_TIMESTAMP, "DWAuditID" = :iv_auditId
+	 FROM "SAP_HPH"."sap.hc.hph.cdw.db.models::DWDocuments.Interaction_Documents_Link_Attr" int_linkattr
+	 inner join :derived_interactions der_int
+	 on int_linkattr."DWLinkID" = der_int."DWLinkID";
+	
+    lt_facts = select *
+    from (
+    select facts.*, facts."InteractionType.OriginalValue" "InteractionType", docs."DWSource", docs."_ProcessingMode", docs."ParentInteractionID",
+    docs."_ParentInteractionSourceID" , docs."PatientID", docs."_PatientSourceID", docs."OrgID", 
+    docs."PeriodStart", docs."PeriodEnd", docs."PeriodTimezone", docs."PluginID", docs."DocumentID", facts."ID"||docs."DocumentID" "InteractionID"
+    from :it_facts facts
+    inner join :valid_docs_for_processing docs
+    on facts."DWID_Document" = docs."DWID");
+     
+    lt_factAttributes = select facts."InteractionID", facts."DWSource", facts."_ProcessingMode", factAttributes."Attribute.OriginalValue", null "Attribute.Code", 
+    null "Attribute.CodeSystem", null "Attribute.CodeSystemVersion",
+    -- Update <document date>
+    case 
+    	when factAttributes."Value.OriginalValue" = '<document_date>' then TO_NVARCHAR(facts."PeriodStart", 'YYYY-MM-DD') 
+    	else factAttributes."Value.OriginalValue" 
+    end "Value.OriginalValue",
+	factAttributes."Value.Code",factAttributes."Value.CodeSystem", null "Value.CodeSystemVersion" 
+	from :it_fact_attributes factAttributes
+	inner join :lt_facts facts
+    on factAttributes."DWID_Document" = facts."DWID_Document"
+    and factAttributes."InteractionType.OriginalValue" = facts."InteractionType.OriginalValue"
+    and factAttributes."ID" = facts."ID"; 
+       
+       
+    -- insert into    "SAP_HPH_DI"."sap.hc.hph.plugins.ccdi.db.models::Stage.Interactions"
+    insert into "SAP_HPH_DI"."sap.hc.hph.plugins.ccdi.db.models::Stage.Interactions"
+    (select :iv_auditId "_PackageID", CURRENT_TIMESTAMP "_LoadTimestamp", facts."DWSource" "_SourceID", facts."_ProcessingMode", facts."InteractionID",
+    facts."_PatientSourceID" ,facts."PatientID",
+    facts."_ParentInteractionSourceID",facts."ParentInteractionID", null "_ConditionSourceID",
+    null "ConditionID" ,facts."InteractionType" "InteractionType.OriginalValue" ,null "InteractionType.Code" ,null "InteractionType.CodeSystem" ,
+    null "InteractionType.CodeSystemVersion" ,null "InteractionStatus", facts."PeriodStart",facts."PeriodEnd" ,facts."PeriodTimezone",
+    facts."OrgID" from :lt_facts facts);
+    
+    -- insert into "SAP_HPH_DI"."sap.hc.hph.plugins.ccdi.db.models::Stage.InteractionDetails"
+    insert into "SAP_HPH_DI"."sap.hc.hph.plugins.ccdi.db.models::Stage.InteractionDetails"
+    (select :iv_auditId "_PackageID", CURRENT_TIMESTAMP "_LoadTimestamp", factsAttr."DWSource" "_SourceID", factsAttr."_ProcessingMode", factsAttr."InteractionID",
+     factsAttr."Attribute.OriginalValue", factsAttr."Attribute.Code", factsAttr."Attribute.CodeSystem", factsAttr."Attribute.CodeSystemVersion",
+     factsAttr."Value.OriginalValue", factsAttr."Value.Code",factsAttr."Value.CodeSystem", factsAttr."Value.CodeSystemVersion"
+     from :lt_factAttributes factsAttr);
+    
+    
+    -- insert into "SAP_HPH_DI"."sap.hc.hph.plugins.ccdi.db.models::Stage.Interaction_Documents_Link"
+    insert into "SAP_HPH_DI"."sap.hc.hph.plugins.ccdi.db.models::Stage.Interaction_Documents_Link"
+    (select :iv_auditId "_PackageID", CURRENT_TIMESTAMP "_LoadTimestamp", facts."DWSource" "_SourceID", facts."_ProcessingMode", 
+     facts."DWSource" "_InteractionSourceID",facts."InteractionID", facts."DWSource" "_DocuemntSourceID", facts."DocumentID", :iv_pluginId "LinkType"
+     from :lt_facts facts);
+     	
+END;

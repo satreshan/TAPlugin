@@ -46,11 +46,11 @@
    </property>
  </configuration>
  <configuration name="SAP.TextAnalysis.DocumentAnalysis.Extraction.ExtractionAnalyzer.TF" based-on="CommonSettings">
-   <property name="ExtractionRules" type="string-list">
-     <string-list-value>RULE_SET_NAME</string-list-value>
-   </property>
+  <!-- <property name="ExtractionRules" type="string-list">
+     <string-list-value>ExampleTA.ta.rules::RULE_EXAMPLE</string-list-value>
+   </property> -->
    <property name="Dictionaries" type="string-list">
-     <string-list-value>DICTIONARY_NAME</string-list-value>
+     <string-list-value>sap.hc.hph.plugins.textProcessing.ExampleTA.ta.dictionaries::DICTIONARY_EXAMPLE</string-list-value>
    </property>
  </configuration>
  <configuration name="SAP.TextAnalysis.DocumentAnalysis.GrammaticalRoles.GrammaticalRoleAnalyzer.GRA" based-on="CommonSettings">
@@ -66,10 +66,11 @@
  </configuration>
  <configuration name="PreProcessor">
    <property name="EntityTypes" type="string-list">
-     <string-list-value> ENTITY_TYPE_NAME</string-list-value>
+     <string-list-value>lymphnode</string-list-value>
+     <string-list-value>Size</string-list-value>
    </property>
-   <property name="OutputMetadata" type="boolean">
+  <!-- <property name="OutputMetadata" type="boolean">
     <boolean-value>false</boolean-value>
-   </property>
+   </property>-->
  </configuration>
 </tasdk-configuration>
